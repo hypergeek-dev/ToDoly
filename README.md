@@ -24,14 +24,19 @@ ToDoLy is a text-based To-Do List application written in C#. The application all
 ## Usage
 
 After running the application, you will see a menu with the following options:
-
+## Main Menu
 Welcome to ToDoLy
-You have X tasks to do and Y tasks are done!
-Pick an option:
-(1) Show Task List (by date or project)
-(2) Add New Task
-(3) Edit Task (Update, mark as done, remove)
-(4) Save and Quit
+
+### Options
+
+- **(1) Show Task List (by date or project)**: This option will display all the tasks, allowing the user to sort them either by date or by project.
+
+- **(2) Add New Task**: This option will prompt the user to enter details for a new task, such as the title, due date, and project it belongs to.
+
+- **(3) Edit Task (Update, mark as done, remove)**: This option will allow the user to edit an existing task. They can update the task's details, mark it as done, or remove it from the list.
+
+- **(4) Save and Quit**: This option will save the current state of the task list to a file and exit the application.
+You can include this section in your README.md to provide users with information on how to 
 
 
 Choose an option to proceed.
