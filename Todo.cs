@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 using System.Linq;
 
 [Serializable]
 public class Task
 {
-    public string Title { get; set; }
-    public DateTime DueDate { get; set; }
-    public string Status { get; set; }
-    public string Project { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public DateTime DueDate { get; set; } = DateTime.MinValue;
+    public string Status { get; set; } = string.Empty;
+    public string Project { get; set; } = string.Empty;
 }
 
-class Program
+class ToDo
 {
     static void Main(string[] args)
     {
@@ -29,7 +29,7 @@ class Program
             Console.WriteLine("(3) Edit Task (Update, mark as done, remove)");
             Console.WriteLine("(4) Save and Quit");
 
-            string option = Console.ReadLine();
+            string option = Console.ReadLine() ?? string.Empty;
 
             switch (option)
             {
@@ -55,7 +55,7 @@ class Program
     static void ShowTasks(List<Task> tasks)
     {
         Console.WriteLine("Sort by: (1) Date (2) Project");
-        string sortOption = Console.ReadLine();
+        string sortOption = Console.ReadLine() ?? string.Empty;
         if (sortOption == "1")
         {
             tasks = tasks.OrderBy(t => t.DueDate).ToList();
@@ -74,76 +74,84 @@ class Program
 
     static void AddNewTask(List<Task> tasks)
     {
-        Console.WriteLine("Enter task title:");
-        string title = Console.ReadLine();
-        Console.WriteLine("Enter due date (yyyy-mm-dd):");
-        DateTime dueDate = DateTime.Parse(Console.ReadLine());
-        Console.WriteLine("Enter project:");
-        string project = Console.ReadLine();
-
-        Task newTask = new Task
+        try
         {
-            Title = title,
-            DueDate = dueDate,
-            Status = "Pending",
-            Project = project
-        };
+            Console.WriteLine("Enter task title:");
+            string title = Console.ReadLine() ?? string.Empty;
+            Console.WriteLine("Enter due date (yyyy-mm-dd):");
+            DateTime dueDate = DateTime.Parse(Console.ReadLine() ?? string.Empty);
+            Console.WriteLine("Enter project:");
+            string project = Console.ReadLine() ?? string.Empty;
 
-        tasks.Add(newTask);
+            Task newTask = new Task
+            {
+                Title = title,
+                DueDate = dueDate,
+                Status = "Pending",
+                Project = project
+            };
+
+            tasks.Add(newTask);
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Invalid date format. Please try again.");
+        }
     }
 
     static void EditTask(List<Task> tasks)
     {
         ShowTasks(tasks);
         Console.WriteLine("Enter task number to edit:");
-        int taskNumber = int.Parse(Console.ReadLine()) - 1;
-
-        if (taskNumber >= 0 && taskNumber < tasks.Count)
+        try
         {
-            Console.WriteLine("Choose an option: (1) Update (2) Mark as done (3) Remove");
-            string editOption = Console.ReadLine();
-            if (editOption == "1")
+            int taskNumber = int.Parse(Console.ReadLine() ?? string.Empty) - 1;
+
+            if (taskNumber >= 0 && taskNumber < tasks.Count)
             {
-                Console.WriteLine("Enter new title:");
-                tasks[taskNumber].Title = Console.ReadLine();
-                Console.WriteLine("Enter new due date (yyyy-mm-dd):");
-                tasks[taskNumber].DueDate = DateTime.Parse(Console.ReadLine());
-                Console.WriteLine("Enter new project:");
-                tasks[taskNumber].Project = Console.ReadLine();
+                Console.WriteLine("Choose an option: (1) Update (2) Mark as done (3) Remove");
+                string editOption = Console.ReadLine() ?? string.Empty;
+                if (editOption == "1")
+                {
+                    Console.WriteLine("Enter new title:");
+                    tasks[taskNumber].Title = Console.ReadLine() ?? string.Empty;
+                    Console.WriteLine("Enter new due date (yyyy-mm-dd):");
+                    tasks[taskNumber].DueDate = DateTime.Parse(Console.ReadLine() ?? string.Empty);
+                    Console.WriteLine("Enter new project:");
+                    tasks[taskNumber].Project = Console.ReadLine() ?? string.Empty;
+                }
+                else if (editOption == "2")
+                {
+                    tasks[taskNumber].Status = "Done";
+                }
+                else if (editOption == "3")
+                {
+                    tasks.RemoveAt(taskNumber);
+                }
             }
-            else if (editOption == "2")
+            else
             {
-                tasks[taskNumber].Status = "Done";
-            }
-            else if (editOption == "3")
-            {
-                tasks.RemoveAt(taskNumber);
+                Console.WriteLine("Invalid task number.");
             }
         }
-        else
+        catch (FormatException)
         {
-            Console.WriteLine("Invalid task number.");
+            Console.WriteLine("Invalid number format. Please try again.");
         }
     }
 
     static void SaveTasks(List<Task> tasks)
     {
-        using (FileStream fs = new FileStream("tasks.dat", FileMode.Create))
-        {
-            BinaryFormatter formatter = new BinaryFormatter();
-            formatter.Serialize(fs, tasks);
-        }
+        string jsonString = JsonSerializer.Serialize(tasks);
+        File.WriteAllText("tasks.json", jsonString);
     }
 
     static List<Task> LoadTasks()
     {
-        if (File.Exists("tasks.dat"))
+        if (File.Exists("tasks.json"))
         {
-            using (FileStream fs = new FileStream("tasks.dat", FileMode.Open))
-            {
-                BinaryFormatter formatter = new BinaryFormatter();
-                return (List<Task>)formatter.Deserialize(fs);
-            }
+            string jsonString = File.ReadAllText("tasks.json");
+            return JsonSerializer.Deserialize<List<Task>>(jsonString);
         }
         return new List<Task>();
     }
